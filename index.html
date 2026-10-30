@@ -81,7 +81,7 @@
     <symbol id="i-whatsapp" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a.9.9 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.9 4.9 0 0 0 1 2.6 11.2 11.2 0 0 0 4.3 3.8c1.6.7 2.2.7 3 .6a2.6 2.6 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .2-1.2c-.1-.1-.3-.2-.5-.3Z"/></symbol>
     <symbol id="i-instagram" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/></g><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor"/></symbol>
     <symbol id="i-linkedin" viewBox="0 0 24 24"><path fill="currentColor" d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05a3.74 3.74 0 0 1 3.37-1.85c3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45Z"/></symbol>
-    <symbol id="i-upwork" viewBox="0 0 24 24"><path fill="currentColor" d="M18.56 13.16c-1.1 0-2.14-.47-3.07-1.23l.22-1.08.01-.04c.2-1.14.85-3.06 2.84-3.06a2.7 2.7 0 0 1 0 5.4Zm0-8.14c-3.24 0-5.01 2.06-5.6 4.3-1.42-2.15-2.5-4.79-2.9-7.32H6.96v9.06a3.55 3.55 0 0 1-7.1 0V2H0v8.06a6.65 6.65 0 0 0 13.3 0V8.67c.48 1.78 1.48 3.76 2.92 5.1l-1.85 8.73h3.18l1.32-6.22a5.94 5.94 0 1 0-.31-11.26Z"/></symbol>
+    <symbol id="i-upwork" viewBox="0 0 24 24"><path fill="currentColor" d="M18.561 13.158c-1.102 0-2.135-.467-3.074-1.227l.228-1.076.008-.042c.207-1.143.849-3.06 2.839-3.06 1.492 0 2.703 1.212 2.703 2.703-.001 1.489-1.212 2.702-2.704 2.702zm0-8.14c-2.539 0-4.51 1.649-5.31 4.366-1.22-1.834-2.148-4.036-2.687-5.892H7.828v7.112c-.002 1.406-1.141 2.546-2.547 2.548-1.405-.002-2.543-1.143-2.545-2.548V3.492H0v7.112c0 2.914 2.37 5.303 5.281 5.303 2.913 0 5.283-2.389 5.283-5.303v-1.19c.529 1.107 1.182 2.229 1.974 3.221l-1.673 7.873h2.797l1.213-5.71c1.063.679 2.285 1.109 3.686 1.109 3 0 5.439-2.452 5.439-5.45 0-3-2.439-5.439-5.439-5.439z"/></symbol>
     <symbol id="i-mostaql" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path fill="currentColor" d="M12 6.5 13.6 10l3.9.4-2.9 2.6.8 3.8L12 14.9l-3.4 1.9.8-3.8-2.9-2.6 3.9-.4Z"/></symbol>
     <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></g></symbol>
     <symbol id="i-download" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></g></symbol>
@@ -150,6 +150,33 @@
             Videos that <span class="hl-orange">stop the scroll</span> — and <span class="hl-blue">sell</span>.
           </h1>
 
+          <!-- Cinematic viewfinder scene (mobile view: placed between title and description) -->
+          <div class="hero-scene hero-scene-mobile" aria-hidden="true">
+            <div class="viewfinder">
+              <div class="vf-photo">
+                <img src="assets/images/PORTIFOLIO.png" alt="" width="480" height="480" fetchpriority="high">
+                <span class="vf-focus"></span>
+              </div>
+              <span class="vf-corner tl"></span><span class="vf-corner tr"></span>
+              <span class="vf-corner bl"></span><span class="vf-corner br"></span>
+              <div class="vf-top">
+                <span class="vf-rec"><i></i> REC</span>
+                <span class="vf-tc">00:00:00:00</span>
+                <span>6K · 25p</span>
+              </div>
+              <div class="vf-bottom">
+                <span>ISO 800</span><span>f/1.8</span><span>1/50</span><span>N-Log → Rec.709</span>
+              </div>
+              <div class="vf-scopes">
+                <i style="--h:.35"></i><i style="--h:.55"></i><i style="--h:.8"></i><i style="--h:.6"></i><i style="--h:.9"></i><i style="--h:.5"></i><i style="--h:.7"></i><i style="--h:.4"></i><i style="--h:.65"></i><i style="--h:.3"></i>
+              </div>
+            </div>
+            <div class="scene-tag">
+              <strong>Abdelrazek Mahmoud</strong>
+              <span>Editor · Colorist · Motion · Videographer</span>
+            </div>
+          </div>
+
           <p class="hero-lead">
             I'm <strong>Abdelrazek Mahmoud</strong>, video editor, DaVinci colorist &amp; motion designer.
             You get more watch time, a premium brand look and on-time delivery — from one person who handles the whole post-production.
@@ -180,11 +207,11 @@
           </div>
         </div>
 
-        <!-- Cinematic viewfinder scene -->
-        <div class="hero-scene" aria-hidden="true">
+        <!-- Cinematic viewfinder scene (desktop view: right column) -->
+        <div class="hero-scene hero-scene-desktop" aria-hidden="true">
           <div class="viewfinder">
             <div class="vf-photo">
-              <img src="assets/images/abdelrazek_portrait_480.jpg" alt="" width="480" height="480" fetchpriority="high">
+              <img src="assets/images/PORTIFOLIO.png" alt="" width="480" height="480" fetchpriority="high">
               <span class="vf-focus"></span>
             </div>
             <span class="vf-corner tl"></span><span class="vf-corner tr"></span>
@@ -377,16 +404,18 @@
             </ul>
 
             <div class="skills-video">
-              <div class="video-frame">
-                <video id="skillsVideo" src="assets/preview.mp4" poster="assets/images/preview_poster.jpg" muted playsinline loop preload="metadata" aria-label="AI cinema showcase reel by Abdelrazek Mahmoud"></video>
-                <span class="video-badge"><i></i> Now playing · AI Cinema Showcase</span>
+              <div class="video-frame" id="skillsVideoFrame" data-ar="16/9">
+                <video id="skillsVideo"
+                  src="assets/videos/skills/craft_0_editing.mp4"
+                  poster="assets/videos/skills/craft_0_editing.jpg"
+                  muted
+                  playsinline
+                  loop
+                  preload="metadata"
+                  aria-label="Editing &amp; Pacing showcase by Abdelrazek Mahmoud">
+                </video>
+                <button type="button" class="video-sound" id="videoSoundBtn" aria-label="Unmute audio"><svg aria-hidden="true"><use href="#i-wave"/></svg><span>Sound off</span></button>
                 <div class="video-progress" aria-hidden="true"><i id="skillsProgress"></i></div>
-
-                <div class="video-choice" id="videoChoice" hidden>
-                  <p>Enjoying the reel?</p>
-                  <button type="button" class="btn btn-accent" id="watchFullBtn"><svg><use href="#i-play"/></svg> Continue with sound</button>
-                  <button type="button" class="btn btn-ghost" id="keepScrollBtn">Keep scrolling <svg><use href="#i-arrow-down"/></svg></button>
-                </div>
               </div>
               <p class="skill-caption" id="skillCaption" aria-live="polite"></p>
             </div>
@@ -600,10 +629,29 @@
     </div>
   </dialog>
 
-  <!-- Full reel player (from the skills section) -->
-  <dialog class="reel-dialog" id="reelDialog" aria-label="AI Cinema Showcase" closedby="any">
-    <button type="button" class="icon-btn close" id="reelClose" aria-label="Close"><svg><use href="#i-close"/></svg></button>
-    <video id="reelVideo" src="assets/preview.mp4" poster="assets/images/preview_poster.jpg" controls playsinline preload="none"></video>
+  <!-- Theater player dialog: bigger display in the video's aspect ratio -->
+  <dialog class="theater-dialog" id="theaterDialog" aria-labelledby="theaterTitle" closedby="any">
+    <div class="theater-shell">
+      <div class="theater-head">
+        <div class="theater-info">
+          <h3 id="theaterTitle"></h3>
+          <p id="theaterSub" class="muted small"></p>
+        </div>
+        <div class="theater-actions">
+          <a class="icon-btn" id="theaterExt" href="#" target="_blank" rel="noopener" aria-label="Open in new tab"><svg><use href="#i-external"/></svg></a>
+          <button type="button" class="icon-btn close" id="theaterClose" aria-label="Close video"><svg><use href="#i-close"/></svg></button>
+        </div>
+      </div>
+      <div class="theater-media-frame" id="theaterMediaFrame" data-o="h">
+        <div id="theaterMediaHolder"></div>
+      </div>
+      <div class="theater-foot-bar">
+        <a class="theater-direct-link" id="theaterDirectLink" href="#" target="_blank" rel="noopener">
+          <svg><use href="#i-external"/></svg>
+          <span>Open directly in Google Drive</span>
+        </a>
+      </div>
+    </div>
   </dialog>
 
   <!-- Web3Forms hCaptcha helper -->

@@ -15,6 +15,7 @@
 
   const DATA = window.AZ_DATA || { PROJECTS: [], SERVICES: [] };
   const THUMBS = window.AZ_THUMBS || {};
+  const HAS_THUMB = window.AZ_HAS_THUMB || new Set();
   const WA_NUMBER = '201014673393';
   const BASE_TITLE = document.title;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -26,6 +27,132 @@
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const icon = (name) => `<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
   const waLink = (text) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
+
+  /* ------------------------------------------------------------------ *
+   * 0. Hero entrance animation scene
+   * ------------------------------------------------------------------ */
+  (function initHeroAnimation() {
+    const heroTitle = $('#heroTitle');
+    const heroSection = $('.hero');
+    if (!heroTitle || !heroSection) return;
+
+    // Skip if user prefers reduced motion, or arrived via deep link / already scrolled
+    const params = new URLSearchParams(window.location.search);
+    if (
+      reducedMotion ||
+      window.scrollY > 80 ||
+      window.location.hash ||
+      params.has('project') ||
+      params.has('service')
+    ) {
+      return;
+    }
+
+    // 1. Measure natural coordinates before applying any intro classes
+    const rect = heroTitle.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    // 2. Set intro state: hides surrounding elements cleanly
+    document.body.classList.add('hero-intro');
+
+    const naturalCenterX = rect.left + rect.width / 2;
+    const naturalCenterY = rect.top + rect.height / 2;
+    const screenCenterX = window.innerWidth / 2;
+    const screenCenterY = window.innerHeight / 2;
+
+    const deltaX = Math.round(screenCenterX - naturalCenterX);
+    const deltaY = Math.round(screenCenterY - naturalCenterY);
+
+    // Calculate scale: bigger font in the middle, strictly constrained on mobile to prevent overflow
+    const isMobile = window.innerWidth <= 900;
+    const maxSafeWidth = window.innerWidth - (isMobile ? 32 : 80);
+    let targetScale = Math.min(1.36, maxSafeWidth / rect.width);
+    if (isMobile) {
+      targetScale = Math.min(Math.max(1.02, targetScale), 1.08);
+    } else {
+      targetScale = Math.min(Math.max(1.15, targetScale), 1.36);
+    }
+
+    // Place title at the center in its larger state
+    heroTitle.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${targetScale * 0.94})`;
+    heroTitle.style.opacity = '0';
+    heroTitle.style.filter = 'blur(10px)';
+    heroTitle.style.transition = 'none';
+
+    // Force layout reflow
+    void heroTitle.offsetWidth;
+
+    // Phase 1: Fade & zoom in at the center
+    heroTitle.style.transition = 'opacity 0.45s ease-out, transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s ease-out';
+    heroTitle.style.opacity = '1';
+    heroTitle.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${targetScale})`;
+    heroTitle.style.filter = 'blur(0)';
+
+    let completed = false;
+
+    function finish() {
+      if (completed) return;
+      completed = true;
+      clearTimeout(tMove);
+      clearTimeout(tReveal);
+      clearTimeout(tDone);
+      document.body.classList.remove('hero-intro');
+      document.body.classList.add('hero-ready');
+      heroTitle.style.transition = 'transform 0.4s var(--ease), opacity 0.3s';
+      heroTitle.style.transform = 'translate(0, 0) scale(1)';
+      heroTitle.style.opacity = '1';
+      heroTitle.style.filter = 'none';
+
+      setTimeout(() => {
+        document.body.classList.remove('hero-ready');
+        heroTitle.style.transform = '';
+        heroTitle.style.transition = '';
+        heroTitle.style.opacity = '';
+        heroTitle.style.filter = '';
+      }, 700);
+
+      window.removeEventListener('scroll', onEarlyInteract);
+      window.removeEventListener('pointerdown', onEarlyInteract);
+      window.removeEventListener('keydown', onEarlyInteract);
+    }
+
+    function onEarlyInteract() {
+      finish();
+    }
+
+    // Allow user to skip immediately with scroll, tap, or key press
+    window.addEventListener('scroll', onEarlyInteract, { passive: true, once: true });
+    window.addEventListener('pointerdown', onEarlyInteract, { passive: true, once: true });
+    window.addEventListener('keydown', onEarlyInteract, { passive: true, once: true });
+
+    // Phase 2: Hold for ~0.85s, then glide title to its natural place
+    const tMove = setTimeout(() => {
+      if (completed) return;
+      heroTitle.style.transition = 'transform 0.95s cubic-bezier(0.16, 1, 0.3, 1), filter 0.8s ease';
+      heroTitle.style.transform = 'translate(0, 0) scale(1)';
+    }, 1100);
+
+    // Phase 3: Cascade all other components into view
+    const tReveal = setTimeout(() => {
+      if (completed) return;
+      document.body.classList.remove('hero-intro');
+      document.body.classList.add('hero-ready');
+    }, 1500);
+
+    // Phase 4: Clean up classes and inline styles
+    const tDone = setTimeout(() => {
+      if (completed) return;
+      completed = true;
+      document.body.classList.remove('hero-ready');
+      heroTitle.style.transform = '';
+      heroTitle.style.transition = '';
+      heroTitle.style.opacity = '';
+      heroTitle.style.filter = '';
+      window.removeEventListener('scroll', onEarlyInteract);
+      window.removeEventListener('pointerdown', onEarlyInteract);
+      window.removeEventListener('keydown', onEarlyInteract);
+    }, 2500);
+  })();
 
   /* ------------------------------------------------------------------ *
    * 1. Header, mobile menu & scroll-spy
@@ -68,8 +195,8 @@
   /* ------------------------------------------------------------------ *
    * 2. Hero viewfinder timecode (25 fps)
    * ------------------------------------------------------------------ */
-  const tc = $('#timecode');
-  if (tc && !reducedMotion) {
+  const tcList = $$('.vf-tc');
+  if (tcList.length && !reducedMotion) {
     const start = performance.now();
     const pad = (n) => String(n).padStart(2, '0');
     let last = -1;
@@ -78,7 +205,8 @@
       if (frames !== last) {
         last = frames;
         const f = frames % 25, s = Math.floor(frames / 25);
-        tc.textContent = `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}:${pad(f)}`;
+        const str = `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}:${pad(f)}`;
+        tcList.forEach((el) => { el.textContent = str; });
       }
       requestAnimationFrame(tick);
     };
@@ -129,22 +257,155 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 4. Scroll-driven skills + center video
+   * 4. Scroll-driven skills + center video (Downloaded MP4s per craft)
    * ------------------------------------------------------------------ */
   const skillsSection = $('#skills');
   const skills = $$('.skill').sort((a, b) => a.dataset.i - b.dataset.i);
   const steps = $$('.skills-steps i');
+  const videoFrame = $('#skillsVideoFrame');
   const skillsVideo = $('#skillsVideo');
-  const choice = $('#videoChoice');
+  const badge = $('#videoBadge');
   const caption = $('#skillCaption');
   const progressBar = $('#skillsProgress');
-  const reelDialog = $('#reelDialog');
-  const reelVideo = $('#reelVideo');
+  const soundBtn = $('#videoSoundBtn');
 
-  const CHOICE_AT = 0.86; // scroll progress where the "continue / keep scrolling" prompt appears
+  /*
+   * ─── CRAFT VIDEOS (downloaded local MP4s with tailored aspect ratios) ─
+   *   0  Editing & Pacing      → 16:9 widescreen (STENG Fashion)
+   *   1  Colour Grading        → 9:16 vertical reel (ALEX Before/After)
+   *   2  Motion & 3D           → 16:9 widescreen (3D Earth Orbit)
+   *   3  Sound Design          → 16:9 widescreen (Tamer Hosny Concert)
+   *   4  Generative AI         → 4:5 portrait (AI Cinema Showcase)
+   *   5  Cinematography        → 16:9 widescreen (Formula 1 Highlight)
+   * ───────────────────────────────────────────────────────────────────────
+   */
+  const SKILL_VIDEOS = [
+    {
+      src: 'assets/videos/skills/craft_0_editing.mp4',
+      poster: 'assets/videos/skills/craft_0_editing.jpg',
+      label: 'Editing & Pacing',
+      caption: 'STENG Fashion — Store Launch',
+      ar: '16/9'
+    },
+    {
+      src: 'assets/videos/skills/craft_1_color.mp4',
+      poster: 'assets/videos/skills/craft_1_color.jpg',
+      label: 'Colour Grading',
+      caption: 'ALEX — Colour Grade Pass',
+      ar: '9/16'
+    },
+    {
+      src: 'assets/videos/skills/craft_2_motion.mp4',
+      poster: 'assets/videos/skills/craft_2_motion.jpg',
+      label: 'Motion & 3D',
+      caption: '3D Earth Orbit — Blender VFX',
+      ar: '16/9'
+    },
+    {
+      src: 'assets/videos/skills/craft_3_sound.mp4',
+      poster: 'assets/videos/skills/craft_3_sound.jpg',
+      label: 'Sound Design',
+      caption: 'Tamer Hosny — Live Concert Package',
+      ar: '16/9'
+    },
+    {
+      src: 'assets/videos/skills/craft_4_ai.mp4',
+      poster: 'assets/videos/skills/craft_4_ai.jpg',
+      label: 'Generative AI',
+      caption: 'AI Cinema Showcase — Veo 3 · Google Flow · Higgsfield',
+      ar: '4/5'
+    },
+    {
+      src: 'assets/videos/skills/craft_5_cinematography.mp4',
+      poster: 'assets/videos/skills/craft_5_cinematography.jpg',
+      label: 'Cinematography',
+      caption: 'Formula 1 — Motorsport Highlight',
+      ar: '16/9'
+    }
+  ];
+
   let lastActive = -2;
-  let choiceDismissed = false;
   let skillsTicking = false;
+  let currentSrc = '';
+
+  function setSkillVideo(index) {
+    if (!skillsVideo) return;
+    const info = SKILL_VIDEOS[clamp(index, 0, SKILL_VIDEOS.length - 1)];
+    if (info.src === currentSrc) return;
+    currentSrc = info.src;
+
+    // Dynamically adjust container aspect ratio per program
+    if (videoFrame) {
+      videoFrame.dataset.ar = info.ar;
+    }
+
+    skillsVideo.poster = info.poster;
+    skillsVideo.src = info.src;
+    skillsVideo.setAttribute('aria-label', `${info.label} showcase by Abdelrazek Mahmoud`);
+    skillsVideo.currentTime = 0;
+    skillsVideo.play().catch(() => {});
+
+    if (badge) badge.innerHTML = `<i></i> Now playing · ${esc(info.label)}`;
+  }
+
+  // Sound toggle button (Mute / Unmute)
+  if (soundBtn && skillsVideo) {
+    soundBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      skillsVideo.muted = !skillsVideo.muted;
+      soundBtn.classList.toggle('is-unmuted', !skillsVideo.muted);
+      soundBtn.setAttribute('aria-label', skillsVideo.muted ? 'Unmute video' : 'Mute video');
+      const text = soundBtn.querySelector('span');
+      if (text) text.textContent = skillsVideo.muted ? 'Sound off' : 'Sound on';
+    });
+  }
+
+  // Click on video frame toggles play/pause
+  if (videoFrame && skillsVideo) {
+    videoFrame.addEventListener('click', (e) => {
+      if (e.target.closest('#videoSoundBtn')) return;
+      if (skillsVideo.paused) skillsVideo.play().catch(() => {});
+      else skillsVideo.pause();
+    });
+  }
+
+  // Progress bar update
+  if (progressBar && skillsVideo) {
+    skillsVideo.addEventListener('timeupdate', () => {
+      if (skillsVideo.duration) {
+        progressBar.style.transform = `scaleX(${skillsVideo.currentTime / skillsVideo.duration})`;
+      }
+    });
+  }
+
+  // Allow clicking on any skill to activate immediately and scroll to it
+  skills.forEach((el, i) => {
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', () => {
+      if (!skillsSection) return;
+      lastActive = i;
+      skills.forEach((s, idx) => {
+        s.classList.toggle('is-active', idx === i);
+        s.classList.toggle('is-done', idx < i);
+      });
+      steps.forEach((s, idx) => {
+        s.classList.toggle('is-on', idx <= i);
+        s.classList.toggle('is-current', idx === i);
+      });
+      if (caption) {
+        const cur = skills[i];
+        const title = $('h3', cur).textContent;
+        const text = $('p', cur).textContent;
+        caption.innerHTML = `<b>${esc(title)}</b>${esc(text)}`;
+      }
+      setSkillVideo(i);
+
+      const total = skillsSection.offsetHeight - window.innerHeight;
+      const targetP = 0.03 + ((i + 0.5) / skills.length) * 0.78;
+      const targetY = window.scrollY + skillsSection.getBoundingClientRect().top + targetP * total;
+      window.scrollTo({ top: targetY, behavior: reducedMotion ? 'auto' : 'smooth' });
+    });
+  });
 
   function updateSkills() {
     skillsTicking = false;
@@ -157,8 +418,10 @@
     // Which skill is "on"
     const n = skills.length;
     let active = -1;
-    if (p > 0.02) active = clamp(Math.floor(((p - 0.02) / (CHOICE_AT - 0.06)) * n), 0, n - 1);
-    if (active !== lastActive) {
+    if (p > 0.02) active = clamp(Math.floor(((p - 0.02) / 0.80) * n), 0, n - 1);
+    if (active === -1 && inView) active = 0;
+
+    if (active !== -1 && active !== lastActive) {
       lastActive = active;
       skills.forEach((el, i) => {
         el.classList.toggle('is-active', i === active);
@@ -169,52 +432,30 @@
         el.classList.toggle('is-current', i === active);
       });
       if (caption) {
-        const cur = skills[Math.max(active, 0)];
+        const cur = skills[active];
         const title = $('h3', cur).textContent;
         const text = $('p', cur).textContent;
         caption.innerHTML = `<b>${esc(title)}</b>${esc(text)}`;
       }
+      setSkillVideo(active);
     }
 
-    // Video: plays a bit while scrolling, then offers a choice
-    const atChoice = p >= CHOICE_AT;
-    const showChoice = inView && !choiceDismissed && (atChoice || reducedMotion);
-    choice.hidden = !showChoice;
-
-    if (!inView || atChoice || reducedMotion || reelDialog.open) {
-      if (!skillsVideo.paused) skillsVideo.pause();
-    } else if (skillsVideo.paused) {
-      skillsVideo.play().catch(() => { choice.hidden = false; });
+    if (skillsVideo) {
+      if (!inView || (viewer && viewer.open) || reducedMotion) {
+        if (!skillsVideo.paused) skillsVideo.pause();
+      } else if (skillsVideo.paused) {
+        skillsVideo.play().catch(() => {});
+      }
     }
-    if (!atChoice && !inView) choiceDismissed = false;
   }
   const requestSkills = () => {
     if (!skillsTicking) { skillsTicking = true; requestAnimationFrame(updateSkills); }
   };
   window.addEventListener('scroll', requestSkills, { passive: true });
   window.addEventListener('resize', requestSkills);
+  // Set first video on load
+  setSkillVideo(0);
   updateSkills();
-
-  skillsVideo.addEventListener('timeupdate', () => {
-    if (skillsVideo.duration) progressBar.style.transform = `scaleX(${skillsVideo.currentTime / skillsVideo.duration})`;
-  });
-
-  $('#watchFullBtn').addEventListener('click', () => {
-    skillsVideo.pause();
-    reelVideo.preload = 'auto';
-    try { reelVideo.currentTime = skillsVideo.currentTime || 0; } catch (_) { /* metadata not ready */ }
-    reelVideo.muted = false;
-    reelDialog.showModal();
-    reelVideo.play().catch(() => {});
-  });
-  $('#keepScrollBtn').addEventListener('click', () => {
-    choiceDismissed = true;
-    choice.hidden = true;
-    skillsVideo.pause();
-    $('#work').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
-  });
-  $('#reelClose').addEventListener('click', () => reelDialog.close());
-  reelDialog.addEventListener('close', () => { reelVideo.pause(); requestSkills(); });
 
   /* ------------------------------------------------------------------ *
    * 5. Projects & services rendering
@@ -227,25 +468,45 @@
     return { sub: '', ...item };
   }
   function mediaInfo(v) {
+    const o = (THUMBS && THUMBS[v.id]) || (v.type === 'image' ? 'h' : 'v');
+    const hasThumb = HAS_THUMB instanceof Set ? HAS_THUMB.has(v.id) : Boolean(HAS_THUMB && HAS_THUMB[v.id]);
     switch (v.type) {
-      case 'drive': return { thumb: THUMBS[v.id] ? `assets/thumbs/drive/${v.id}.jpg` : null, o: THUMBS[v.id] || 'v', ext: `https://drive.google.com/file/d/${v.id}/view` };
-      case 'image': return { thumb: THUMBS[v.id] ? `assets/thumbs/drive/${v.id}.jpg` : null, o: THUMBS[v.id] || 'h', ext: `https://drive.google.com/file/d/${v.id}/view` };
-      case 'instagram': return { thumb: null, o: 'v', ext: `https://www.instagram.com/reel/${v.id}/` };
-      case 'local': return { thumb: v.poster || null, o: 'v', ext: v.src };
-      default: return { thumb: null, o: 'v', ext: '#' };
+      case 'drive':
+      case 'image':
+        return {
+          thumb: hasThumb ? `assets/thumbs/drive/${v.id}.jpg` : null,
+          o,
+          ext: `https://drive.google.com/file/d/${v.id}/view`
+        };
+      case 'instagram':
+        return { thumb: null, o: 'v', ext: `https://www.instagram.com/reel/${v.id}/` };
+      case 'local':
+        return { thumb: v.poster || null, o, ext: v.src };
+      default:
+        return { thumb: null, o: 'v', ext: '#' };
     }
   }
-  const fallbackPoster = (title, label, ico = 'play') =>
-    `<span class="poster-fallback">${icon(ico)}<span>${esc(label)}</span></span>`;
+
+  const fallbackPoster = (v, m) => {
+    const tagLabel = m.o === 'h' ? '16:9 Cinema' : (m.o === 's' ? '1:1 Square' : '9:16 Reel');
+    return `
+      <span class="poster-fallback" aria-hidden="true">
+        <span class="pf-brand">${icon('stage')} AZ STUDIO</span>
+        <span class="pf-foot">
+          <strong class="pf-title"${isArabic(v.title) ? ' dir="rtl" lang="ar"' : ''}>${esc(v.title)}</strong>
+          <span class="pf-tag">${esc(tagLabel)}</span>
+        </span>
+      </span>`;
+  };
 
   function videoCard(raw, key) {
     const v = normalize(raw);
     const m = mediaInfo(v);
     const typeIcon = v.type === 'instagram' ? 'instagram' : v.type === 'image' ? 'image' : null;
-    const label = v.type === 'instagram' ? 'Instagram reel' : v.type === 'image' ? 'Grade still' : 'Watch video';
+    const poster = fallbackPoster(v, m);
     const media = m.thumb
-      ? `<img src="${esc(m.thumb)}" alt="" loading="lazy" decoding="async">`
-      : fallbackPoster(v.title, label, typeIcon || 'play');
+      ? `${poster}<img src="${esc(m.thumb)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`
+      : poster;
     return `
       <article class="vcard" data-key="${esc(key)}" data-type="${v.type}" data-o="${m.o}">
         <button type="button" class="vcard-media" aria-label="${v.type === 'image' ? 'View' : 'Play'}: ${esc(v.title)}">
@@ -269,8 +530,8 @@
     grid.innerHTML = DATA.PROJECTS.map((p, i) => `
       <a class="project-card reveal" href="?project=${encodeURIComponent(p.slug)}" data-open-project="${esc(p.slug)}" aria-label="Open project: ${esc(p.title)}">
         <div class="project-cover">
-          ${p.cover ? `<img src="${esc(p.cover)}" alt="" loading="${i < 3 ? 'eager' : 'lazy'}" decoding="async">`
-            : `<span class="poster-fallback">${icon('stage')}<strong>${esc(p.client.split('·')[0].trim())}</strong><span>${esc(p.tag)}</span></span>`}
+          <span class="poster-fallback" aria-hidden="true">${icon('stage')}<strong>${esc(p.client.split('·')[0].trim())}</strong><span>${esc(p.tag)}</span></span>
+          ${p.cover ? `<img src="${esc(p.cover)}" alt="" loading="${i < 3 ? 'eager' : 'lazy'}" decoding="async" onerror="this.remove()">` : ''}
           <span class="project-tag">${esc(p.tag)}</span>
           <span class="project-count">${icon('play')} ${p.videos.length} ${p.videos.length === 1 ? 'film' : 'videos'}</span>
           <span class="project-play">${icon('play')}</span>
@@ -419,7 +680,7 @@
       }
     }
     if (!viewer.open) {
-      skillsVideo.pause();
+      if (skillsVideo && !skillsVideo.paused) skillsVideo.pause();
       viewer.showModal();
     }
     return true;
@@ -511,30 +772,93 @@
     const p = projectBySlug.get(slug);
     return p ? normalize(p.videos[Number(idx)]) : null;
   }
-  function playCard(card) {
+  const theater = $('#theaterDialog');
+  const theaterHolder = $('#theaterMediaHolder');
+  const theaterFrame = $('#theaterMediaFrame');
+  const theaterTitle = $('#theaterTitle');
+  const theaterSub = $('#theaterSub');
+  const theaterExt = $('#theaterExt');
+  const theaterClose = $('#theaterClose');
+  const theaterDirectLink = $('#theaterDirectLink');
+
+  function openTheater(card) {
+    if (!theater || !card) return;
     const v = findItem(card.dataset.key);
     if (!v) return;
-    stopPlaying(card);
-    cardTemplates.set(card.dataset.key, card.outerHTML);
+    const m = mediaInfo(v);
+
+    theaterTitle.textContent = v.title;
+    theaterSub.textContent = v.sub || '';
+    if (v.sub && isArabic(v.sub)) {
+      theaterSub.setAttribute('dir', 'rtl');
+      theaterSub.setAttribute('lang', 'ar');
+    } else {
+      theaterSub.removeAttribute('dir');
+      theaterSub.removeAttribute('lang');
+    }
+
+    if (theaterExt) theaterExt.href = m.ext;
+    if (theaterFrame) theaterFrame.dataset.o = m.o;
+
+    if (theaterDirectLink) {
+      if (v.type === 'drive') {
+        theaterDirectLink.href = `https://drive.google.com/file/d/${encodeURIComponent(v.id)}/view`;
+        theaterDirectLink.style.display = 'inline-flex';
+        const span = theaterDirectLink.querySelector('span');
+        if (span) span.textContent = 'Open directly in Google Drive';
+      } else if (v.type === 'instagram') {
+        theaterDirectLink.href = `https://www.instagram.com/reel/${encodeURIComponent(v.id)}/`;
+        theaterDirectLink.style.display = 'inline-flex';
+        const span = theaterDirectLink.querySelector('span');
+        if (span) span.textContent = 'Open on Instagram';
+      } else {
+        theaterDirectLink.style.display = 'none';
+      }
+    }
 
     let inner = '';
-    if (v.type === 'drive') inner = `<iframe src="https://drive.google.com/file/d/${encodeURIComponent(v.id)}/preview" title="${esc(v.title)}" allow="autoplay; fullscreen; encrypted-media" allowfullscreen loading="lazy"></iframe>`;
-    else if (v.type === 'instagram') inner = `<iframe src="https://www.instagram.com/reel/${encodeURIComponent(v.id)}/embed/" title="${esc(v.title)}" allow="autoplay; fullscreen; encrypted-media" allowfullscreen loading="lazy" scrolling="no"></iframe>`;
-    else if (v.type === 'image') inner = `<img class="vcard-full" src="https://drive.google.com/thumbnail?id=${encodeURIComponent(v.id)}&sz=w1600" alt="${esc(v.title)}">`;
-    else if (v.type === 'local') inner = `<video src="${esc(v.src)}" poster="${esc(v.poster || '')}" controls autoplay playsinline></video>`;
+    if (v.type === 'drive') {
+      inner = `<iframe class="drive-frame" src="https://drive.google.com/file/d/${encodeURIComponent(v.id)}/preview" title="${esc(v.title)}" allow="autoplay; fullscreen; encrypted-media" allowfullscreen loading="eager"></iframe>`;
+    } else if (v.type === 'instagram') {
+      inner = `<iframe class="insta-frame" src="https://www.instagram.com/reel/${encodeURIComponent(v.id)}/embed/" title="${esc(v.title)}" allow="autoplay; fullscreen; encrypted-media" allowfullscreen loading="eager" scrolling="no"></iframe>`;
+    } else if (v.type === 'image') {
+      inner = `<img src="https://drive.google.com/thumbnail?id=${encodeURIComponent(v.id)}&sz=w1600" alt="${esc(v.title)}">`;
+    } else if (v.type === 'local') {
+      inner = `<video src="${esc(v.src)}" poster="${esc(v.poster || '')}" controls autoplay playsinline></video>`;
+    }
 
-    const media = $('.vcard-media', card);
-    const holder = document.createElement('div');
-    holder.className = 'vcard-media';
-    holder.innerHTML = inner;
-    media.replaceWith(holder);
-    card.classList.add('is-playing');
-    requestAnimationFrame(() => card.scrollIntoView({ block: 'nearest', behavior: reducedMotion ? 'auto' : 'smooth' }));
+    theaterHolder.innerHTML = inner;
+    theater.showModal();
+  }
+
+  function closeTheater() {
+    if (theater && theater.open) theater.close();
+  }
+
+  if (theater) {
+    theater.addEventListener('close', () => {
+      if (theaterHolder) theaterHolder.innerHTML = ''; // stops playing iframe / video
+    });
+    // Backdrop click dismisses modal
+    theater.addEventListener('click', (e) => {
+      if (e.target === theater || e.target.classList.contains('theater-shell')) closeTheater();
+    });
+  }
+  if (theaterClose) {
+    theaterClose.addEventListener('click', closeTheater);
   }
 
   viewerBody.addEventListener('click', (e) => {
-    const playBtn = e.target.closest('button.vcard-media');
-    if (playBtn) { playCard(playBtn.closest('.vcard')); return; }
+    // If clicking external link in card info, let standard link behavior proceed
+    if (e.target.closest('.vcard-ext')) return;
+
+    // Tapping anywhere on the video card opens theater
+    const card = e.target.closest('.vcard');
+    if (card) {
+      openTheater(card);
+      return;
+    }
+
     if (e.target.closest('[data-goto-contact]')) {
       closeView(() => {
         $('#contact').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
