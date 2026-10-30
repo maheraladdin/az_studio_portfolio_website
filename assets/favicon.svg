@@ -1,10 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="AZ Studio">
-  <rect width="64" height="64" rx="14" fill="#0B0D12"/>
-  <rect x="1.5" y="1.5" width="61" height="61" rx="12.5" fill="none" stroke="#FF8A3D" stroke-opacity=".35" stroke-width="1.5"/>
-  <!-- A -->
-  <path fill="#F4F1EC" fill-rule="evenodd" d="M6 48 17 16h6l11 32h-6.5l-2.2-6.5H14.7L12.5 48ZM16.6 36h6.8L20 26Z"/>
-  <!-- Z -->
-  <path fill="#FF8A3D" d="M35 16h23v6L43 42h15v6H35v-6l15-20H35Z"/>
-  <!-- REC dot -->
-  <circle cx="53" cy="9.5" r="2.6" fill="#3AA0FF"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" aria-label="AZ Studio" role="img" viewBox="0 0 64 64"><rect width="64" height="64" fill="#0B0D12" rx="14"/><rect width="61" height="61" x="1.5" y="1.5" fill="none" stroke="#FF8A3D" stroke-opacity=".35" stroke-width="1.5" rx="12.5"/><path fill="#F4F1EC" fill-rule="evenodd" d="M6 48 17 16h6l11 32h-6.5l-2.2-6.5H14.7L12.5 48ZM16.6 36h6.8L20 26Z"/><path fill="#FF8A3D" d="M35 16h23v6L43 42h15v6H35v-6l15-20H35Z"/><circle cx="53" cy="9.5" r="2.6" fill="#3AA0FF"/></svg>
